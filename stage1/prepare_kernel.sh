@@ -1,0 +1,34 @@
+#!/bin/bash
+
+. $(dirname $0)/../global_definitions
+
+mkdir -p $BUILD_PATH
+
+pushd $BUILD_PATH
+
+if [ ! $SKIP_KERNELFETCH ]; then
+    if [ $FETCH_METHOD == "git" ]; then
+        echo "Fetching kernel using git clone, target $LINUX_BRANCH ..."
+        git clone $GITCLONE_ARGS ${GIT_PROTOCOL}github.com/raspberrypi/linux -b $LINUX_BRANCH
+    elif [ $FETCH_METHOD == "wget" ]; then
+        echo "Fetching kernel using wget, target $LINUX_BRANCH ..."
+        wget -c https://github.com/raspberrypi/linux/archive/${LINUX_BRANCH}.zip
+        unzip $LINUX_BRANCH.zip
+        mv linux-${LINUX_BRANCH} linux
+    fi
+else
+    echo "Skipping kernel fetch, as SKIP_KERNELFETCH is set"
+fi
+
+popd
+
+# Prepare for building
+
+if [ $LINUX_BRANCH = "rpi-4.12.y" ]; then
+    echo "Patching $THERMAL_PATCH_DEST"
+    echo "See https://github.com/raspberrypi/linux/issues/2136 for more infomation"
+    patch $THERMAL_PATCH_DEST $THERMAL_PATCH_FILE
+fi
+
+echo "Copying config..."
+cp $BCMRPI3_CONFFILE $BUILD_PATH/linux/.config

@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Compilation-related Variables
+
+ARCH=${ARCH=arm64}
+CROSS_COMPILE=${CROSS_COMPILE=aarch64-linux-gnu-}
+
+BUILD_PATH=${BUILD_PATH=$(dirname $0)/../build}
+DIST_PATH=${DIST_PATH=$(dirname $0)/../dist}
+
+# Wrapped for Unix-style Makefile in linux
+# Now you are at $BUILD_PATH/linux
+INSTALL_PATH=../kernel_dist
+INSTALL_MOD_PATH=../kernel_dist
+INSTALL_HDR_PATH=../kernel_dist/usr/
+
+# The ralative path
+KERNEL_DIST_PATH=$BUILD_PATH/kernel_dist
+
+LINUX_BRANCH=${LINUX_BRANCH="rpi-4.12.y"}
+
+FETCH_METHOD=${FETCH_METHOD="wget"}
+GIT_PROTOCOL="git://"
+
+GIT_COMMAND="clone"
+GITCLONE_ARGS=""
+
+# Debootstrap Variables
+
+ROOT_PATH=${ROOT_PATH=$DIST_PATH/rootfs/}
+BOOT_PATH=${BOOT_PATH=$DIST_PATH/boot/}
+mkdir -p $ROOT_PATH
+mkdir -p $BOOT_PATH
+
+SUITE=${SUITE="stable"}
+CENTOS_ARCH=${CENTOS_ARCH-aarch64}
+CENTOS_VERSION=7
+MIRROR=${MIRROR="http://mirror.centos.org/altarch"}
+ROOTARCHIVE_URL_BASE=$MIRROR/$CENTOS_VERSION/isos/$CENTOS_ARCH/
+
+# rpi-firmware related
+FW_BOOTCODE="bootcode.bin "
+FW_START="start.elf start_x.elf start_cd.elf start_db.elf "
+FW_FIXUP="fixup.dat fixup_x.dat fixup_cd.dat fixup_db.dat "
+FW_LICENSE="COPYING.linux LICENCE.broadcom "
+
+FW_BOOT=${FW_BOOTCODE}${FW_START}${FW_FIXUP}${FW_LICENSE}
+
+
+# Pre-Compilation Variables
+
+# This includes some fixes, along with a downstream mmc driver
+# For more details see
+# bcm2835-v4l2: https://github.com/raspberrypi/linux/issues/2117
+# MMC issue: https://github.com/raspberrypi/linux/issues/2124
+BCMRPI3_CONFFILE=$(dirname $0)/../stage1/bcmrpi3_config
+
+# For more details see issue https://github.com/raspberrypi/linux/issues/2136
+THERMAL_PATCH_FILE=$(dirname $0)/../stage1/thermal_patch
+THERMAL_PATCH_DEST=$BUILD_PATH/linux/drivers/thermal/Kconfig
+
+# Filesystem type
+FSTYPE=${FSTYPE-btrfs}

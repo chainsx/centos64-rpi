@@ -1,0 +1,66 @@
+#!/bin/bash
+
+FSTYPE=__FSTYPE_REPLACE__
+REVERT="init="$0
+
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+
+BLKDEV_ROOTPART=$(findmnt / -o SOURCE -n)
+BLKDEV_ROOTPART_NAME=$(echo $BLKDEV_ROOTPART | cut -d "/" -f 3)
+BLKDEV=/dev/$(find /sys/block/*/ | grep $BLKDEV_ROOTPART_NAME$ | cut -d "/" -f 4)
+
+RESIZE_TARGET=$BLKDEV_ROOTPART
+
+if [ ! $RESIZER ]; then
+    case $FSTYPE in
+        f2fs)
+            RESIZER=$(which resize.f2fs)
+            ;;
+        ext2|ext3|ext4)
+            RESIZER=$(which resize2fs)
+            ;;
+        btrfs)
+            RESIZER=$(which btrfs)
+            RESIZER_ARGS="filesystem resize max"
+            RESIZE_TARGET="/"
+            mount -o remount,rw $RESIZE_TARGET
+            ;;
+        *)
+            RESIZER=$(which resize.$FSTYPE)
+            echo "FSTYPE is $FSTYPE, RESIZER could be $RESIZER"
+            ;;
+    esac
+    if [ ! -e $RESIZER ]; then
+        echo "Filesystem resizer for $FSTYPE not found!"
+        exit 1
+    fi
+fi
+
+echo "Resizing partiton..."
+parted -s $BLKDEV -- resizepart 2 100%
+
+echo "Informing kernel..."
+# Make sure we have updated partition info
+partprobe $BLKDEV
+partprobe $BLKDEV_ROOTPART
+
+echo "Resizing filesystem..."
+$RESIZER $RESIZER_ARGS $RESIZE_TARGET
+
+echo "Reverting /boot/cmdline.txt changes..."
+if [ ! -e /boot/cmdline.txt ]; then
+    echo "/boot/cmdline.txt not found, mounting /boot..."
+    mount /dev/mmcblk0p1 /boot
+fi
+sed -i "s^$REVERT^^g" /boot/cmdline.txt
+
+echo "Syncing to disk..."
+sync
+
+echo "Rebooting in 10 seconds..."
+sleep 10
+
+# reboot command not rquired, Running as PID 1
+echo "Sending sysrq b..."
+echo b > /proc/sysrq-trigger
