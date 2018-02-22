@@ -31,6 +31,6 @@ Email: chainsx@outlook.com               i@chainsx.cn
 
 ## 下载地址
 
-百度云:链接:https://pan.baidu.com/s/1pNkNOMn (UMRnInside)
+百度云:链接:https://pan.baidu.com/s/1pNkNOMn (UMRnInside未测试)
 
-百度云:链接:https://pan.baidu.com/s/1hsEjcOG (ChainsX) 密码:lfmx
+百度云:链接:https://pan.baidu.com/s/1ggwt68N （chainsx已经测试通过）
