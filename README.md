@@ -1,7 +1,8 @@
 # RPi-CentOS-AArch64
 
+![example1](https://assets.ubuntu.com/v1/c69a8b3c-centos-logo.png)
+
 ### [64位Ubuntu戳这里](https://github.com/chainsx/ubuntu64-rpi)
-### [64位Debian构建装置戳这里](https://github.com/UMRnInside/RPi-arm64)
 
 ## 前言
 
